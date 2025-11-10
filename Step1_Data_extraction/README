@@ -1,0 +1,74 @@
+# DataProcessing Function
+
+This R script defines a function `DataProcessing()` that processes patient pharmacokinetic (PK) data for the drug **Nalmefene** and exports cleaned, individual-level experimental data to CSV files.
+
+##  Purpose
+
+The goal of this function is to extract and preprocess time-concentration data for each patient in a study, specifically:
+
+- Filter out low or missing concentrations.
+- Convert and align individual-level experimental drug concentration data.
+- Match body weight for each patient.
+- Export individual data files to disk for further analysis.
+- Compute overall concentration summary statistics across all patients.
+
+##  Output
+
+Three types of CSV files are created in the specified `output_dir`:
+
+| File Name Format                  | Description                                         |
+|-----------------------------------|-----------------------------------------------------|
+| `Individual_Data_<PatientID>.csv` | Time and concentration data for a single patient    |
+| `all_weights.csv`                 | Patient ID and weight mapping                       |
+| `all_sd_Nalmefene.csv`            | Summary of average and SD of concentrations         |
+| `all_concentrations.csv`          | Time and patients concentrations as matrix/table    |
+| `all_times.csv`                   | Real time of the measured concentration data        |
+
+Example output directory structure:
+
+```
+extracted_data/
+├── Individual_Data_1.csv
+├── Individual_Data_2.csv
+├── Individual_Data_3.csv
+├── ...
+├── Individual_Data_61.csv (optimal parameters as last patient)
+├
+├── all_weights.csv
+├── all_sd_Nalmefene.csv
+├── all_concentrations.csv
+├── all_times.csv
+```
+
+##  Summary Statistics
+
+The file `all_sd_Nalmefene.csv` contains two columns:
+
+- `mean`: Average concentration across all patients at each shared timepoint
+- `sd`: Standard deviation of concentrations at each shared timepoint
+
+> A row with mean = 0 and sd = 0 is included at the top of the file to represent baseline conditions.
+
+Note 1: Time values are included from this summary file.
+Note 2: Optimal (mean) patient saved as final Individual_Data_*.csv
+
+##  Function Usage
+
+```r
+DataProcessing(output_dir = "extracted_data/")
+```
+
+- `output_dir` (optional): The folder where the CSV files will be saved. If the directory does not exist, it will be created.
+
+##  Assumptions
+
+- Only the drug **Nalmefene** is processed (hardcoded filter).
+- The dataset `allPatientData` must contain the columns: `USUBJID`, `ATPTN`, `AVAL`, and `TRTP`.
+- The dataset `allBW` must contain a `WEIGHT` column for each `USUBJID`.
+
+##  Required Objects in Environment
+
+Make sure the following objects exist before calling `DataProcessing()`:
+
+- `allPatientData` – Full patient-level PK data
+- `allBW` – Weight data for each subject
