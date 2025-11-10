@@ -1,0 +1,7 @@
+sigmaM 2.742
+deltaM 0.5545
+deltaI 0.3376
+alpha 9.817e-06
+betaB 3.608e-12
+betaK 1.153e-13
+betaC 1.496e-12
