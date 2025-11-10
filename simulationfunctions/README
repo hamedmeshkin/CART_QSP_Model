@@ -1,0 +1,61 @@
+# simulate_onerealpatient Function
+
+This R function `simulate_nalmefene()` runs a pharmacokinetic (PK) simulation for a single patient using a dynamic ODE model and calculates
+ the fitting error between model predictions and experimental data. This function is typically used as part of a parameter estimation or model
+  fitting pipeline for Nalmefene or other drug PK modeling.
+
+##  Purpose
+
+- Simulates the drug concentration over time using ODEs via the `deSolve` backend.
+- Loads model-specific dynamic libraries (`.dll` or `.so`) and parameter/state definitions.
+- Compares model predictions to observed clinical data.
+- Computes a combined error value used for model fitting.
+
+##  Arguments
+
+```r
+simulate_onerealpatient(parsin, modelfolder, funfolder, patientID, Exp_datafile, returnfull = FALSE)
+```
+
+| Argument      | Description |
+|---------------|-------------|
+| `parsin`      | A named vector of parameter values to override in the model |
+| `modelfolder` | Folder name under `../models/` where compiled model and parameter files are stored |
+| `funfolder`   | Folder name under `../simulationfunctions/` with simulation logic |
+| `patientID`   | Integer ID (row index) to retrieve patient-specific data like weight |
+| `Exp_datafile`| Path to CSV containing experimental concentration-time data |
+| `returnfull`  | If `TRUE`, returns full output including time points and concentrations. If `FALSE`, returns a scalar error value only |
+
+##  Input Files
+
+- `../models/<modelfolder>/delaymymod.so` or `.dll`: Compiled model library
+- `delaystates.R`, `delaypars.R`: Define initial states and default parameters
+- `all_weights.csv`: Patient-specific weight data
+- `all_Mean_sd_Nalmefene.csv` or similar: Clinical PK data
+- `getPhysiologicalError.R`, `getNegativityError.R`: Error calculation utilities
+
+##  Key Features
+
+- **Model is loaded and unloaded dynamically**, supporting Linux and Windows systems.
+- **Handles patient-specific parameters** such as weight.
+- **Performs parameter injection** into default model parameters before simulation.
+- **Calculates prediction error** (normalized root squared error) and penalty for negative values.
+- **Return Mode**: Optionally returns full simulation output for inspection or visualization.
+
+##  Output
+
+- If `returnfull = FALSE`: Returns a scalar fitness value `fval` used for optimization.
+- If `returnfull = TRUE`: Returns a list of:
+  - Total error (`fval`)
+  - Time points
+  - Observed concentrations (`yO`)
+  - Predicted concentrations (`yP`)
+  - Original clinical data
+  - Full simulation output (`out`)
+
+##  Notes
+
+- The dose is fixed to `3e6 ng` at time zero.
+- Output `PlasmaN` is assumed to represent nalmefene plasma concentrations.
+- Ensure all required input files and compiled model libraries are in the correct relative paths.
+- Model unloading (`dyn.unload`) is critical to avoid namespace conflicts during repeated runs.
