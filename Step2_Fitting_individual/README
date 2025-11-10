@@ -1,0 +1,92 @@
+# CMA-ES Parameter Fitting Pipeline for individual fitting
+
+This R script implements a CMA-ES (Covariance Matrix Adaptation Evolution Strategy) based optimization workflow to estimate pharmacokinetic
+ (PK) model parameters. It is designed to be run from jobscript RunFit.sh and supports parallel execution. This code is designed to perform
+ individual fitting using Nalmefene concentration data measured in a previous step as Individual_Data_1-60.csv.
+ THE EXPERIMENTAL DATA ARE FED INTO THE MAIN SIMULATION THOUGH THE OBJECTIV FUNCTION.
+
+
+
+##  Dependencies
+
+- `cmaes`
+- `parallel`
+- `optparse`
+- `deSolve`
+
+##  Command Line Arguments
+
+The script accepts the following options via command line using `optparse`:
+
+| Option              |    Description                                              |
+|---------------------|-------------------------------------------------------------|
+| `-s` / `--seed`     | Random seed (default: 100) 									|
+| `-c` / `--cores`    | Number of CPU cores to use for parallelization (default: 1) |
+| `-f` / `--forking`  | Enable forking (parallel mode, not available on Windows) 	|
+| `-l` / `--lambda`   | CMA-ES population size (default: 4 + floor(3*log(N))) 		|
+| `-m` / `--maxiter`  | Maximum number of generations (default: 100 * N^2) 			|
+| `-t` / `--tol`      | Tolerance for convergence (default: 0.01) 					|
+
+##  Input Files
+
+- `nnn.txt`: Contains initial parameter guesses and bounds (`Initial`, `Parameter`, `Low`, `High`)
+- `extracted_data/all_Mean_sd_Nalmefene.csv`: Experimental data file used for error calculation
+
+##  Output Structure
+
+Results are stored under:
+
+```
+output/fitting_results/test3/
+├──── 1
+├────── figs/
+├────── fitting_results /
+│		  ├── CMAESgeneration      # Best parameters per generation
+│ 		  ├── CMAESerror           # Corresponding errors per generation
+│ 		  ├── pars.txt             # Final best parameters (decoded)
+│		  ├── scaled_pars.txt      # Final best parameters (scaled 0-10)
+├──── 2
+├────── figs/
+├────── fitting_results /
+│		  ├── CMAESgeneration      # Best parameters per generation
+│ 		  ├── CMAESerror           # Corresponding errors per generation
+│ 		  ├── pars.txt             # Final best parameters (decoded)
+│		  ├── scaled_pars.txt      # Final best parameters (scaled 0-10)
+├──── ...
+:		  :
+:		  :
+:		  :
+
+```
+
+##  Workflow Overview
+
+1. **Parse arguments**
+2. **Set up output directories**
+3. **Read and encode initial parameters**
+4. **Define objective function and decode helper**
+5. **Execute CMA-ES optimization**
+6. **Log and save best parameter set**
+7. **(Optional) Spike-in starting values from previous runs**
+8. **Call post-analysis scripts such as plotting**
+
+##  Parallelization
+
+- Supports both `fork` and `socket` clusters.
+- Automatically sets `mclapply` or `clusterApply` based on OS and user flags.
+- For `forking = TRUE`, the script uses `mclapply` (Linux/macOS only).
+
+##  Plotting
+
+The script using ggplot by the end of the code to visualize the fitting results.
+
+##  Notes
+
+- Uses a 0–10 scaled parameter encoding for optimization, decoded before simulation.
+- Objective function is computed from simulation against experimental data.
+- `deWrapper.R` is used to adapt `lapply` for population-based evaluation.
+- Set `use_spike = "yes"` if resuming from a previous best-fit solution.
+
+---
+
+Ensure all referenced scripts and input files are in the correct relative paths as expected by this pipeline.
